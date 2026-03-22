@@ -1,0 +1,1614 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>YC Office Hours</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;700&family=DM+Mono:wght@300;400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0906;
+    --surface: #12100d;
+    --surface2: #1c1915;
+    --border: #2a2520;
+    --gold: #c9933a;
+    --gold-dim: #7a5820;
+    --gold-light: #e8b86d;
+    --text: #e8e0d4;
+    --text-dim: #7a7168;
+    --text-mid: #b0a898;
+    --red: #c94a3a;
+    --green: #4a9a6a;
+    --radius: 6px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 15px;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  /* ── Header ── */
+  header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 24px;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface);
+    flex-shrink: 0;
+  }
+
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .logo-mark {
+    width: 32px; height: 32px;
+    background: var(--gold);
+    border-radius: 4px;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Playfair Display', serif;
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--bg);
+    letter-spacing: -1px;
+  }
+
+  .logo-text {
+    font-family: 'Playfair Display', serif;
+    font-size: 16px;
+    font-weight: 500;
+    color: var(--text);
+    letter-spacing: 0.02em;
+  }
+
+  .logo-sub {
+    font-size: 11px;
+    color: var(--text-dim);
+    font-family: 'DM Mono', monospace;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .header-right {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .phase-badge {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: var(--gold);
+    background: rgba(201,147,58,0.1);
+    border: 1px solid var(--gold-dim);
+    padding: 3px 10px;
+    border-radius: 20px;
+    letter-spacing: 0.05em;
+  }
+
+  .btn-reset {
+    background: none;
+    border: 1px solid var(--border);
+    color: var(--text-dim);
+    padding: 5px 12px;
+    border-radius: var(--radius);
+    font-size: 12px;
+    cursor: pointer;
+    font-family: 'DM Sans', sans-serif;
+    transition: all 0.15s;
+  }
+  .btn-reset:hover { border-color: var(--gold-dim); color: var(--gold); }
+
+  .btn-api-key {
+    background: rgba(201,147,58,0.08);
+    border: 1px solid var(--gold-dim);
+    color: var(--gold);
+    padding: 5px 12px;
+    border-radius: var(--radius);
+    font-size: 11px;
+    cursor: pointer;
+    font-family: 'DM Mono', monospace;
+    transition: all 0.15s;
+  }
+  .btn-api-key:hover { background: rgba(201,147,58,0.15); }
+
+  /* ── Main Layout ── */
+  main {
+    flex: 1;
+    display: flex;
+    overflow: hidden;
+  }
+
+  /* ── Chat Column ── */
+  .chat-col {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    min-width: 0;
+  }
+
+  .messages {
+    flex: 1;
+    overflow-y: auto;
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    scroll-behavior: smooth;
+  }
+
+  .messages::-webkit-scrollbar { width: 4px; }
+  .messages::-webkit-scrollbar-track { background: transparent; }
+  .messages::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+  /* ── Message Bubbles ── */
+  .msg {
+    display: flex;
+    gap: 12px;
+    animation: fadeUp 0.3s ease forwards;
+    max-width: 680px;
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .msg.user { align-self: flex-end; flex-direction: row-reverse; }
+
+  .avatar {
+    width: 32px; height: 32px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    font-size: 13px;
+    font-weight: 600;
+    font-family: 'DM Mono', monospace;
+    margin-top: 2px;
+  }
+
+  .avatar.yc {
+    background: var(--gold);
+    color: var(--bg);
+  }
+
+  .avatar.human {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--text-mid);
+  }
+
+  .bubble {
+    padding: 12px 16px;
+    border-radius: var(--radius);
+    line-height: 1.65;
+    font-size: 14px;
+  }
+
+  .msg.assistant .bubble {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--text);
+    border-top-left-radius: 2px;
+  }
+
+  .msg.user .bubble {
+    background: rgba(201,147,58,0.12);
+    border: 1px solid rgba(201,147,58,0.25);
+    color: var(--text);
+    border-top-right-radius: 2px;
+  }
+
+  .bubble strong { color: var(--gold-light); font-weight: 500; }
+  .bubble em { color: var(--text-mid); font-style: italic; }
+
+  .bubble p { margin-bottom: 8px; }
+  .bubble p:last-child { margin-bottom: 0; }
+  .bubble ul { padding-left: 18px; margin-bottom: 8px; }
+  .bubble li { margin-bottom: 4px; }
+  .bubble blockquote {
+    border-left: 2px solid var(--gold-dim);
+    padding-left: 12px;
+    color: var(--text-mid);
+    font-style: italic;
+    margin: 8px 0;
+  }
+  .bubble hr {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 10px 0;
+  }
+
+  /* Design doc styles */
+  .bubble .design-doc {
+    background: var(--bg);
+    border: 1px solid var(--gold-dim);
+    border-radius: 4px;
+    padding: 16px;
+    margin-top: 12px;
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    color: var(--text-mid);
+    white-space: pre-wrap;
+    max-height: 300px;
+    overflow-y: auto;
+  }
+
+  .copy-btn {
+    margin-top: 8px;
+    background: rgba(201,147,58,0.1);
+    border: 1px solid var(--gold-dim);
+    color: var(--gold);
+    font-size: 12px;
+    padding: 5px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-family: 'DM Mono', monospace;
+    transition: all 0.15s;
+  }
+  .copy-btn:hover { background: rgba(201,147,58,0.2); }
+
+  /* Typing indicator */
+  .typing-indicator {
+    display: flex;
+    gap: 4px;
+    align-items: center;
+    padding: 12px 16px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    border-top-left-radius: 2px;
+    width: fit-content;
+  }
+
+  .dot {
+    width: 6px; height: 6px;
+    background: var(--gold-dim);
+    border-radius: 50%;
+    animation: pulse 1.2s ease-in-out infinite;
+  }
+  .dot:nth-child(2) { animation-delay: 0.2s; }
+  .dot:nth-child(3) { animation-delay: 0.4s; }
+
+  @keyframes pulse {
+    0%, 80%, 100% { transform: scale(0.7); opacity: 0.4; }
+    40% { transform: scale(1); opacity: 1; }
+  }
+
+  /* ── Input Bar ── */
+  .input-bar {
+    padding: 16px 24px;
+    border-top: 1px solid var(--border);
+    background: var(--surface);
+    display: flex;
+    gap: 10px;
+    align-items: flex-end;
+    flex-shrink: 0;
+  }
+
+  textarea {
+    flex: 1;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    padding: 10px 14px;
+    resize: none;
+    outline: none;
+    line-height: 1.5;
+    min-height: 44px;
+    max-height: 140px;
+    transition: border-color 0.15s;
+  }
+
+  textarea::placeholder { color: var(--text-dim); }
+  textarea:focus { border-color: var(--gold-dim); }
+
+  .send-btn {
+    width: 44px; height: 44px;
+    background: var(--gold);
+    border: none;
+    border-radius: var(--radius);
+    color: var(--bg);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transition: all 0.15s;
+    font-size: 18px;
+  }
+  .send-btn:hover { background: var(--gold-light); }
+  .send-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  /* ── Sidebar ── */
+  .sidebar {
+    width: 260px;
+    border-left: 1px solid var(--border);
+    background: var(--surface);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    flex-shrink: 0;
+  }
+
+  .sidebar-section {
+    padding: 20px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .sidebar-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--text-dim);
+    margin-bottom: 12px;
+  }
+
+  .progress-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .progress-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 12px;
+    color: var(--text-dim);
+    transition: color 0.2s;
+  }
+
+  .progress-item.active { color: var(--text); }
+  .progress-item.done { color: var(--green); }
+
+  .pip {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    border: 1px solid var(--text-dim);
+    flex-shrink: 0;
+    transition: all 0.2s;
+  }
+
+  .progress-item.active .pip {
+    background: var(--gold);
+    border-color: var(--gold);
+    box-shadow: 0 0 6px rgba(201,147,58,0.6);
+  }
+
+  .progress-item.done .pip {
+    background: var(--green);
+    border-color: var(--green);
+  }
+
+  .principles {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px;
+  }
+
+  .principle {
+    font-size: 12px;
+    color: var(--text-dim);
+    line-height: 1.55;
+    padding: 10px;
+    border: 1px solid transparent;
+    border-radius: 4px;
+    transition: all 0.2s;
+  }
+
+  .principle.highlight {
+    color: var(--text-mid);
+    border-color: var(--border);
+    background: var(--surface2);
+  }
+
+  .principle .p-title {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--gold-dim);
+    margin-bottom: 4px;
+  }
+
+  .principle.highlight .p-title { color: var(--gold); }
+
+  /* ── Welcome Screen ── */
+  .welcome {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: safe center;
+    padding: 40px 24px;
+    text-align: center;
+    gap: 32px;
+    overflow-y: auto;
+  }
+
+  .welcome-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 36px;
+    font-weight: 400;
+    color: var(--text);
+    line-height: 1.2;
+  }
+
+  .welcome-title span { color: var(--gold); }
+
+  .welcome-sub {
+    font-size: 15px;
+    color: var(--text-dim);
+    max-width: 440px;
+    line-height: 1.7;
+  }
+
+  .mode-cards {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+    justify-content: center;
+    max-width: 560px;
+  }
+
+  .mode-card {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 20px 24px;
+    cursor: pointer;
+    text-align: left;
+    transition: all 0.2s;
+    width: 240px;
+  }
+
+  .mode-card:hover {
+    border-color: var(--gold-dim);
+    background: rgba(201,147,58,0.04);
+    transform: translateY(-2px);
+  }
+
+  .mode-card-icon {
+    font-size: 24px;
+    margin-bottom: 10px;
+  }
+
+  .mode-card-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 18px;
+    font-weight: 500;
+    color: var(--text);
+    margin-bottom: 6px;
+  }
+
+  .mode-card-desc {
+    font-size: 12px;
+    color: var(--text-dim);
+    line-height: 1.6;
+  }
+
+  /* ── Idea Input Screen ── */
+  .idea-screen {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 24px;
+    gap: 24px;
+  }
+
+  .idea-label {
+    font-family: 'Playfair Display', serif;
+    font-size: 24px;
+    color: var(--text);
+  }
+
+  .idea-label span { color: var(--gold); }
+
+  .idea-input {
+    width: 100%;
+    max-width: 540px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 15px;
+    padding: 16px;
+    resize: none;
+    outline: none;
+    height: 120px;
+    line-height: 1.6;
+    transition: border-color 0.15s;
+  }
+
+  .idea-input::placeholder { color: var(--text-dim); }
+  .idea-input:focus { border-color: var(--gold-dim); }
+
+  .start-btn {
+    background: var(--gold);
+    border: none;
+    border-radius: var(--radius);
+    color: var(--bg);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    padding: 12px 28px;
+    cursor: pointer;
+    letter-spacing: 0.02em;
+    transition: all 0.15s;
+  }
+  .start-btn:hover { background: var(--gold-light); }
+
+  /* ── Error ── */
+  .error-msg {
+    color: var(--red);
+    font-size: 13px;
+    font-family: 'DM Mono', monospace;
+    padding: 8px 12px;
+    background: rgba(201,74,58,0.08);
+    border: 1px solid rgba(201,74,58,0.2);
+    border-radius: 4px;
+    margin: 0 24px 12px;
+  }
+
+  /* ── Settings Modal ── */
+  .settings-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.6);
+    backdrop-filter: blur(4px);
+    z-index: 100;
+    display: none;
+    align-items: flex-start;
+    justify-content: center;
+    padding-top: 80px;
+    animation: fadeIn 0.2s ease;
+  }
+  .settings-overlay.open { display: flex; }
+
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+  }
+
+  .settings-panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    width: 100%;
+    max-width: 440px;
+    max-height: calc(100vh - 120px);
+    overflow-y: auto;
+    padding: 28px;
+    animation: slideUp 0.25s ease;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+  }
+
+  @keyframes slideUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .settings-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+  }
+
+  .settings-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 18px;
+    font-weight: 500;
+    color: var(--text);
+  }
+
+  .settings-close {
+    background: none;
+    border: 1px solid var(--border);
+    color: var(--text-dim);
+    width: 32px; height: 32px;
+    border-radius: 50%;
+    font-size: 16px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s;
+  }
+  .settings-close:hover { border-color: var(--gold-dim); color: var(--gold); }
+
+  .btn-settings {
+    background: rgba(201,147,58,0.08);
+    border: 1px solid var(--gold-dim);
+    color: var(--gold);
+    padding: 5px 12px;
+    border-radius: var(--radius);
+    font-size: 13px;
+    cursor: pointer;
+    font-family: 'DM Sans', sans-serif;
+    transition: all 0.15s;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+  .btn-settings:hover { background: rgba(201,147,58,0.15); }
+
+  /* Responsive: hide sidebar on small screens */
+  @media (max-width: 640px) {
+    .sidebar { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <div class="logo-mark">YC</div>
+    <div>
+      <div class="logo-text">Office Hours</div>
+      <div class="logo-sub" id="poweredByLabel">Powered by Claude</div>
+    </div>
+  </div>
+  <div class="header-right">
+    <div class="phase-badge" id="phaseBadge">Ready</div>
+    <button class="btn-reset" onclick="switchLang()" id="langBtn" style="font-size: 12px;">中文</button>
+    <button class="btn-settings" onclick="toggleSettings()" id="apiKeyBtn">⚙ Settings</button>
+    <button class="btn-reset" onclick="resetSession()">↺ Reset</button>
+  </div>
+</header>
+
+<main>
+  <div class="chat-col">
+    <!-- WELCOME SCREEN -->
+    <div class="welcome" id="welcomeScreen">
+      <div>
+        <div class="welcome-title" data-i18n="welcomeTitle">What are you<br><span>building?</span></div>
+      </div>
+      <div class="welcome-sub" data-i18n="welcomeSub">
+        A YC-style partner to pressure-test your idea — not a cheerleader.
+        You'll get hard questions, forced alternatives, and a real design doc.
+      </div>
+      <div class="mode-cards">
+        <div class="mode-card" onclick="selectMode('startup')">
+          <div class="mode-card-icon">🚀</div>
+          <div class="mode-card-title" data-i18n="startupTitle">Startup Mode</div>
+          <div class="mode-card-desc" data-i18n="startupDesc">Six forcing questions. Demand reality. Narrowest wedge. Are you actually solving a problem?</div>
+        </div>
+        <div class="mode-card" onclick="selectMode('builder')">
+          <div class="mode-card-icon">🛠</div>
+          <div class="mode-card-title" data-i18n="builderTitle">Builder Mode</div>
+          <div class="mode-card-desc" data-i18n="builderDesc">Side project, hackathon, or open source. Find the most exciting version of your idea.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- IDEA SCREEN -->
+    <div class="idea-screen" id="ideaScreen" style="display:none;">
+      <div class="idea-label" data-i18n="ideaLabel">Tell me about your <span id="modeLabel">idea</span>.</div>
+      <textarea class="idea-input" id="ideaInput" data-i18n-placeholder="ideaPlaceholder" placeholder="Describe what you're building — even a rough sentence is fine. Don't polish it."></textarea>
+      <button class="start-btn" onclick="startSession()" data-i18n="startBtn">Start Office Hours →</button>
+    </div>
+
+    <!-- CHAT SCREEN -->
+    <div class="messages" id="messages" style="display:none;"></div>
+    <div class="error-msg" id="errorMsg" style="display:none;"></div>
+    <div class="input-bar" id="inputBar" style="display:none;">
+      <textarea id="chatInput" placeholder="Your answer…" rows="1" onkeydown="handleKey(event)" oninput="autoResize(this)"></textarea>
+      <button class="send-btn" id="sendBtn" onclick="sendMessage()">↑</button>
+    </div>
+  </div>
+
+  <!-- SIDEBAR -->
+  <div class="sidebar" id="sidebar" style="display:none;">
+    <div class="sidebar-section">
+      <div class="sidebar-label" data-i18n="sessionProgress">Session Progress</div>
+      <div class="progress-list" id="progressList"></div>
+    </div>
+    <div class="principles" id="principlesList"></div>
+  </div>
+</main>
+
+<!-- SETTINGS MODAL -->
+<div class="settings-overlay" id="settingsOverlay" onclick="if(event.target===this)closeSettings()">
+  <div class="settings-panel">
+    <div class="settings-header">
+      <div class="settings-title" data-i18n="settingsTitle">⚙ Settings</div>
+      <button class="settings-close" onclick="closeSettings()">×</button>
+    </div>
+
+    <!-- Provider Selection -->
+    <div style="margin-bottom: 10px;">
+      <label style="font-size: 11px; color: var(--text-dim); display: block; margin-bottom: 4px;" data-i18n="providerLabel">Provider</label>
+      <select
+        id="apiProvider"
+        onchange="saveApiConfig(); updateApiProviderUI();"
+        style="width: 100%; background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius); color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 13px; padding: 10px 12px; outline: none; cursor: pointer;"
+      >
+        <option value="claude">Claude (Anthropic)</option>
+        <option value="openai">OpenAI Compatible</option>
+      </select>
+    </div>
+
+    <!-- API Key -->
+    <div style="margin-bottom: 10px;">
+      <label style="font-size: 11px; color: var(--text-dim); display: block; margin-bottom: 4px;" data-i18n="apiKeyLabel">API Key (required)</label>
+      <input
+        type="password"
+        id="apiKeyInput"
+        placeholder="sk-..."
+        style="width: 100%; background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius); color: var(--text); font-family: 'DM Mono', monospace; font-size: 13px; padding: 10px 12px; outline: none;"
+        oninput="saveApiConfig()"
+      >
+    </div>
+
+    <!-- Custom Endpoint (OpenAI only) -->
+    <div id="endpointGroup" style="margin-bottom: 10px; display: none;">
+      <label id="endpointLabel" style="font-size: 11px; color: var(--text-dim); display: block; margin-bottom: 4px;">API Endpoint (optional)</label>
+      <input
+        type="text"
+        id="apiEndpoint"
+        placeholder="https://api.openai.com/v1/chat/completions"
+        style="width: 100%; background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius); color: var(--text); font-family: 'DM Mono', monospace; font-size: 13px; padding: 10px 12px; outline: none;"
+        oninput="saveApiConfig()"
+      >
+      <div style="font-size: 10px; color: var(--text-dim); margin-top: 4px;">Default: https://api.openai.com/v1/chat/completions</div>
+    </div>
+
+    <!-- Model (OpenAI only) -->
+    <div id="modelGroup" style="margin-bottom: 10px; display: none;">
+      <label id="modelLabel" style="font-size: 11px; color: var(--text-dim); display: block; margin-bottom: 4px;">Model (optional)</label>
+      <input
+        type="text"
+        id="apiModel"
+        placeholder="gpt-4o"
+        style="width: 100%; background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius); color: var(--text); font-family: 'DM Mono', monospace; font-size: 13px; padding: 10px 12px; outline: none;"
+        oninput="saveApiConfig()"
+      >
+      <div style="font-size: 10px; color: var(--text-dim); margin-top: 4px;">Default: gpt-4o</div>
+    </div>
+
+    <!-- Use Local Proxy (OpenAI only) -->
+    <div id="proxyGroup" style="margin-bottom: 10px; display: none;">
+      <label style="font-size: 11px; color: var(--text-dim); display: flex; align-items: center; gap: 8px; cursor: pointer;">
+        <input
+          type="checkbox"
+          id="useProxy"
+          onchange="saveApiConfig()"
+          style="accent-color: var(--gold); cursor: pointer;"
+        >
+        Use Local CORS Proxy (localhost:3456)
+      </label>
+      <div style="font-size: 10px; color: var(--text-dim); margin-top: 4px; line-height: 1.5;">
+        Run <code style="color: var(--gold); background: rgba(201,147,58,0.1); padding: 1px 4px; border-radius: 3px;">node proxy.js</code> first, then enable this to bypass CORS restrictions.
+      </div>
+    </div>
+
+    <div style="font-size: 11px; color: var(--text-dim); line-height: 1.5; margin-top: 8px;">
+      <span id="apiHelpText">Get your key at <a href="https://console.anthropic.com/" target="_blank" style="color: var(--gold);">console.anthropic.com</a>.</span>
+      <span data-i18n="storedLocally">Stored locally in your browser.</span>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── State ──────────────────────────────────────────────────────────────────
+let mode = null;          // 'startup' | 'builder'
+let history = [];         // [{role, content}]
+let isLoading = false;
+let designDocText = null;
+
+// API Configuration
+let apiProvider = localStorage.getItem('api_provider') || 'claude'; // 'claude' | 'openai'
+let apiKey = localStorage.getItem('api_key') || '';
+let apiEndpoint = localStorage.getItem('api_endpoint') || '';
+let apiModel = localStorage.getItem('api_model') || '';
+let useProxy = localStorage.getItem('use_proxy') === 'true';
+let lang = localStorage.getItem('app_lang') || 'en'; // 'en' | 'zh'
+
+// ── i18n ──────────────────────────────────────────────────────────────────
+const I18N = {
+  en: {
+    welcomeTitle: 'What are you<br><span>building?</span>',
+    welcomeSub: 'A YC-style partner to pressure-test your idea — not a cheerleader. You\'ll get hard questions, forced alternatives, and a real design doc.',
+    apiConfig: '📎 API Configuration',
+    providerLabel: 'Provider',
+    apiKeyLabel: 'API Key (required)',
+    storedLocally: 'Stored locally in your browser.',
+    startupTitle: 'Startup Mode',
+    startupDesc: 'Six forcing questions. Demand reality. Narrowest wedge. Are you actually solving a problem?',
+    builderTitle: 'Builder Mode',
+    builderDesc: 'Side project, hackathon, or open source. Find the most exciting version of your idea.',
+    ideaLabel: 'Tell me about your <span id="modeLabel">{mode}</span>.',
+    ideaPlaceholder: 'Describe what you\'re building — even a rough sentence is fine. Don\'t polish it.',
+    startBtn: 'Start Office Hours →',
+    sessionProgress: 'Session Progress',
+    corePrinciples: 'Core Principles',
+    chatPlaceholder: 'Your answer…',
+    ready: 'Ready',
+    thinking: 'Thinking…',
+    done: 'Done ✓',
+    inProgress: 'In Progress',
+    building: 'Building',
+    error: 'Error',
+    startupIdea: 'startup idea',
+    project: 'project',
+    copyDoc: 'Copy Design Doc',
+    copied: 'Copied ✓',
+    apiKeySaved: 'API Key saved!',
+    apiKeyCleared: 'API Key cleared.',
+    enterApiKey: 'Enter your {provider} API Key:',
+    pleaseEnterKey: 'Please enter your {provider} API Key first',
+    langToggle: '中文',
+    settingsTitle: '⚙ Settings',
+    settingsBtn: '⚙ Settings',
+  },
+  zh: {
+    welcomeTitle: '你在做<br><span>什么？</span>',
+    welcomeSub: '一个 YC 风格的合伙人来考验你的想法——不是啦啦队。你会收到尖锐的问题、被迫思考替代方案，最终得到一份真正的设计文档。',
+    apiConfig: '📎 API 配置',
+    providerLabel: '服务商',
+    apiKeyLabel: 'API Key（必填）',
+    storedLocally: '密钥存储在浏览器本地。',
+    startupTitle: '创业模式',
+    startupDesc: '六个核心问题：需求验证、现状分析、目标用户、最小切入点。你真的在解决问题吗？',
+    builderTitle: '创作者模式',
+    builderDesc: '个人项目、黑客松或开源项目。找到你想法中最令人兴奋的版本。',
+    ideaLabel: '告诉我你的<span id="modeLabel">{mode}</span>。',
+    ideaPlaceholder: '描述你在做什么——哪怕只是一句粗略的描述也行。不需要打磨。',
+    startBtn: '开始 Office Hours →',
+    sessionProgress: '会话进度',
+    corePrinciples: '核心原则',
+    chatPlaceholder: '你的回答……',
+    ready: '就绪',
+    thinking: '思考中…',
+    done: '完成 ✓',
+    inProgress: '进行中',
+    building: '构建中',
+    error: '出错',
+    startupIdea: '创业想法',
+    project: '项目',
+    copyDoc: '复制设计文档',
+    copied: '已复制 ✓',
+    apiKeySaved: 'API Key 已保存！',
+    apiKeyCleared: 'API Key 已清除。',
+    enterApiKey: '请输入你的 {provider} API Key：',
+    pleaseEnterKey: '请先输入你的 {provider} API Key',
+    langToggle: 'EN',
+    settingsTitle: '⚙ 设置',
+    settingsBtn: '⚙ 设置',
+  },
+};
+
+function t(key) {
+  return I18N[lang]?.[key] || I18N['en'][key] || key;
+}
+
+function switchLang() {
+  lang = lang === 'en' ? 'zh' : 'en';
+  localStorage.setItem('app_lang', lang);
+  applyLang();
+}
+
+function applyLang() {
+  // Update toggle button
+  document.getElementById('langBtn').textContent = t('langToggle');
+
+  // Update all elements with data-i18n
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    const key = el.getAttribute('data-i18n');
+    const val = t(key);
+    if (key === 'ideaLabel') {
+      const modeText = mode === 'startup' ? t('startupIdea') : t('project');
+      el.innerHTML = val.replace('{mode}', modeText);
+    } else {
+      el.innerHTML = val;
+    }
+  });
+
+  // Update placeholders
+  document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+    const key = el.getAttribute('data-i18n-placeholder');
+    el.placeholder = t(key);
+  });
+
+  // Update chat input placeholder
+  const chatInput = document.getElementById('chatInput');
+  if (chatInput) chatInput.placeholder = t('chatPlaceholder');
+
+  // Update badge text if not in a session
+  const badge = document.getElementById('phaseBadge');
+  if (badge && !mode) badge.textContent = t('ready');
+
+  // Update powered by label
+  updateApiProviderUI();
+  updateApiKeyButton();
+}
+
+// ── API Configuration Management ────────────────────────────────────────────
+function saveApiConfig() {
+  const provider = document.getElementById('apiProvider')?.value || 'claude';
+  const key = document.getElementById('apiKeyInput')?.value?.trim() || '';
+  const endpoint = document.getElementById('apiEndpoint')?.value?.trim() || '';
+  const model = document.getElementById('apiModel')?.value?.trim() || '';
+  const proxy = document.getElementById('useProxy')?.checked || false;
+
+  apiProvider = provider;
+  apiKey = key;
+  apiEndpoint = endpoint;
+  useProxy = proxy;
+  apiModel = model;
+
+  localStorage.setItem('api_provider', apiProvider);
+  localStorage.setItem('api_key', apiKey);
+  localStorage.setItem('api_endpoint', apiEndpoint);
+  localStorage.setItem('api_model', apiModel);
+  localStorage.setItem('use_proxy', useProxy);
+
+  updateApiProviderUI();
+  updateApiKeyButton();
+}
+
+function updateApiKeyButton() {
+  const btn = document.getElementById('apiKeyBtn');
+  if (!btn) return;
+  if (apiKey) {
+    btn.innerHTML = `✓ ${apiProvider === 'openai' ? 'OpenAI' : 'Claude'}`;
+    btn.style.background = 'rgba(74, 154, 106, 0.1)';
+    btn.style.color = 'var(--green)';
+    btn.style.borderColor = 'var(--green)';
+  } else {
+    btn.innerHTML = t('settingsBtn');
+    btn.style.background = 'rgba(201,147,58,0.08)';
+    btn.style.color = 'var(--gold)';
+    btn.style.borderColor = 'var(--gold-dim)';
+  }
+}
+
+function toggleSettings() {
+  const overlay = document.getElementById('settingsOverlay');
+  overlay.classList.toggle('open');
+}
+
+function closeSettings() {
+  document.getElementById('settingsOverlay').classList.remove('open');
+}
+
+function updateApiProviderUI() {
+  // Show/hide endpoint and model fields based on provider
+  const endpointGroup = document.getElementById('endpointGroup');
+  const modelGroup = document.getElementById('modelGroup');
+  const endpointLabel = document.getElementById('endpointLabel');
+  const modelLabel = document.getElementById('modelLabel');
+  const helpText = document.getElementById('apiHelpText');
+
+  // Update "Powered by" label in header
+  const poweredByLabel = document.getElementById('poweredByLabel');
+
+  if (apiProvider === 'openai') {
+    const proxyGroup = document.getElementById('proxyGroup');
+    if (endpointGroup) endpointGroup.style.display = 'block';
+    if (proxyGroup) proxyGroup.style.display = 'block';
+    if (modelGroup) modelGroup.style.display = 'block';
+    if (endpointLabel) endpointLabel.textContent = 'API Endpoint (optional)';
+    if (modelLabel) modelLabel.textContent = 'Model (optional)';
+    if (helpText) {
+      helpText.innerHTML = 'Get your key at <a href="https://platform.openai.com/api-keys" target="_blank" style="color: var(--gold);">platform.openai.com</a>. Works with any OpenAI-compatible API.';
+    }
+    if (poweredByLabel) poweredByLabel.textContent = 'Powered by OpenAI';
+  } else {
+    const proxyGroupHide = document.getElementById('proxyGroup');
+    if (endpointGroup) endpointGroup.style.display = 'none';
+    if (modelGroup) modelGroup.style.display = 'none';
+    if (proxyGroupHide) proxyGroupHide.style.display = 'none';
+    if (helpText) {
+      helpText.innerHTML = 'Get your key at <a href="https://console.anthropic.com/" target="_blank" style="color: var(--gold);">console.anthropic.com</a>.';
+    }
+    if (poweredByLabel) poweredByLabel.textContent = 'Powered by Claude';
+  }
+}
+
+// Initialize API config on page load
+document.addEventListener('DOMContentLoaded', () => {
+  const providerSelect = document.getElementById('apiProvider');
+  const apiKeyInput = document.getElementById('apiKeyInput');
+  const endpointInput = document.getElementById('apiEndpoint');
+  const modelInput = document.getElementById('apiModel');
+
+  if (providerSelect) providerSelect.value = apiProvider;
+  if (apiKeyInput && apiKey) apiKeyInput.value = apiKey;
+  if (endpointInput && apiEndpoint) endpointInput.value = apiEndpoint;
+  if (modelInput && apiModel) modelInput.value = apiModel;
+
+  const proxyCheckbox = document.getElementById('useProxy');
+  if (proxyCheckbox) proxyCheckbox.checked = useProxy;
+
+  applyLang();
+  updateApiProviderUI();
+  updateApiKeyButton();
+});
+
+const STARTUP_PHASES = [
+  { id: 'q1', label: 'Q1 — Demand Reality' },
+  { id: 'q2', label: 'Q2 — Status Quo' },
+  { id: 'q3', label: 'Q3 — Target Human' },
+  { id: 'q4', label: 'Q4 — Narrowest Wedge' },
+  { id: 'q5', label: 'Q5 — Observation' },
+  { id: 'q6', label: 'Q6 — Future-Fit' },
+  { id: 'doc', label: 'Design Doc' },
+];
+
+const BUILDER_PHASES = [
+  { id: 'problem', label: 'Problem + Constraints' },
+  { id: 'premises', label: 'Premise Challenge' },
+  { id: 'alts',    label: 'Alternatives' },
+  { id: 'design',  label: 'Design Doc' },
+];
+
+const STARTUP_PRINCIPLES = [
+  { title: 'Specificity is currency', text: 'Vague answers get pushed. "Enterprises in healthcare" is not a customer.' },
+  { title: 'Interest ≠ demand', text: 'Waitlists, signups, "that\'s interesting" — none of it counts. Behavior counts. Money counts.' },
+  { title: 'Status quo is your rival', text: 'Not the other startup — the cobbled-together spreadsheet your user is already living with.' },
+  { title: 'Narrow beats wide', text: 'The smallest version someone pays for this week beats the platform vision.' },
+  { title: 'Watch, don\'t demo', text: 'Guided tours teach you nothing. Sitting behind someone while they struggle — that teaches everything.' },
+];
+
+const BUILDER_PRINCIPLES = [
+  { title: 'Delight is currency', text: 'What makes someone say "whoa"? Chase that.' },
+  { title: 'Ship something showable', text: 'The best version of anything is the one that exists.' },
+  { title: 'Explore before optimizing', text: 'Try the weird idea first. Polish later.' },
+  { title: 'Solve your own problem', text: 'If you\'re building it for yourself, trust that instinct.' },
+];
+
+// ── System Prompts ─────────────────────────────────────────────────────────
+function getSystemPrompt(m, idea) {
+  const today = new Date().toISOString().split('T')[0];
+  const langInstruction = lang === 'zh'
+    ? '\n\nIMPORTANT: Respond entirely in Chinese (简体中文). The user prefers Chinese.\n\n'
+    : '\n\n';
+
+  if (m === 'startup') {
+    return `You are a YC partner running office hours. The founder's idea: "${idea}"
+
+Today: ${today}. This is a live session — conduct it one question at a time.
+
+YOUR JOB: Pressure-test this idea through six forcing questions. Be direct, not cruel. Push until answers are specific and evidence-based. Comfort means the founder hasn't gone deep enough.
+
+SIX QUESTIONS (ask ONE at a time, wait for response):
+Q1 — Demand Reality: Strongest evidence someone would be upset if this disappeared tomorrow? Push for: specific behavior, payments, panic when it breaks. Red flags: "people say it's interesting", waitlist signups.
+Q2 — Status Quo: What are users doing RIGHT NOW to solve this, even badly? Push for: specific workflow, hours/dollars wasted. Red flag: "nothing exists, that's the opportunity."
+Q3 — Target Human: Name the actual person who needs this most. Title, company, what gets them fired. Push for a name. Red flag: category answers like "SMBs" or "marketing teams."
+Q4 — Narrowest Wedge: Smallest version someone pays for THIS WEEK — not after you build the platform. Push for one feature, one workflow. Red flag: "we need to build everything first."
+Q5 — Observation: Watched someone use it without helping them? What surprised you? Red flag: "we did demo calls" or "nothing surprised me."
+Q6 — Future-Fit: In 3 years, does your product become more essential or less? Push for a specific thesis, not "AI keeps getting better."
+
+STYLE:
+- Ask Q1 first, then wait. Don't batch questions.
+- After each answer, react genuinely — push back if vague, praise real specificity.
+- After Q6, write a DESIGN DOC in this format (use markdown, wrap in triple backticks after a line that says DESIGN_DOC_START):
+
+DESIGN_DOC_START
+\`\`\`
+# Design: [Product Name]
+Generated: ${today}
+Mode: Startup
+
+## Problem
+[1-2 sentences from the session]
+
+## Target Customer
+[specific person identified in Q3]
+
+## Demand Evidence
+[from Q1 — what behavior/payment proves it]
+
+## Status Quo
+[from Q2 — what they do now]
+
+## Narrowest Wedge
+[from Q4 — smallest payable version]
+
+## Future-Fit Thesis
+[from Q6]
+
+## What I Noticed About How You Think
+[2-3 mentor-like observations — quote founder's words back to them]
+
+## Assignment
+[One concrete action — not a strategy, an action]
+\`\`\`
+
+Start immediately: ask Q1. Don't introduce yourself at length. Get to work.` + langInstruction;
+  }
+
+  return `You are a YC partner running builder office hours. The project: "${idea}"
+
+Today: ${today}. Enthusiastic collaborator mode — help them find the most exciting version of their idea.
+
+YOUR JOB: Four phases, one at a time.
+
+PHASE 1 — Understand: Ask about the core problem they're solving and constraints. What's the "whoa" factor?
+
+PHASE 2 — Premise Challenge: Identify 2-3 premises the project rests on. Challenge at least one — not to discourage, but to stress-test. "What if [assumption] is wrong? What breaks?"
+
+PHASE 3 — Alternatives: Generate 2 distinct approaches. For each: name it, describe it in a sentence, say what it optimizes for and what it sacrifices.
+
+PHASE 4 — Design Doc (after getting answers to the above):
+
+DESIGN_DOC_START
+\`\`\`
+# Design: [Project Name]
+Generated: ${today}
+Mode: Builder
+
+## Problem Statement
+[what it solves and for whom]
+
+## What Makes This Cool
+[the core delight or novelty]
+
+## Constraints
+[from the conversation]
+
+## Premises Challenged
+[which premise was stress-tested and what we learned]
+
+## Approaches Considered
+### Approach A: [name]
+[description + trade-offs]
+### Approach B: [name]
+[description + trade-offs]
+
+## Recommended Approach
+[chosen approach with rationale]
+
+## Next Build Steps
+[concrete: what to implement first, second, third]
+
+## What I Noticed About How You Think
+[2-3 observations — quote their words back]
+\`\`\`
+
+STYLE: Be enthusiastic and specific. Riff on ideas. Bring adjacent ideas they might not have considered. Ask one question at a time. Start by asking them to describe what they're building and what would make someone say "whoa" when they first see it.` + langInstruction;
+}
+
+// ── UI Helpers ─────────────────────────────────────────────────────────────
+function selectMode(m) {
+  mode = m;
+  document.getElementById('welcomeScreen').style.display = 'none';
+  document.getElementById('ideaScreen').style.display = 'flex';
+  document.getElementById('modeLabel').textContent = m === 'startup' ? t('startupIdea') : t('project');
+}
+
+function setupSidebar() {
+  const phases = mode === 'startup' ? STARTUP_PHASES : BUILDER_PHASES;
+  const principles = mode === 'startup' ? STARTUP_PRINCIPLES : BUILDER_PRINCIPLES;
+
+  const pl = document.getElementById('progressList');
+  pl.innerHTML = phases.map((p, i) =>
+    `<div class="progress-item ${i === 0 ? 'active' : ''}" id="phase_${p.id}">
+      <div class="pip"></div>
+      <span>${p.label}</span>
+    </div>`
+  ).join('');
+
+  const prl = document.getElementById('principlesList');
+  prl.innerHTML = `<div class="sidebar-label" data-i18n="corePrinciples">${t('corePrinciples')}</div>` +
+    principles.map(p =>
+      `<div class="principle">
+        <div class="p-title">${p.title}</div>
+        ${p.text}
+      </div>`
+    ).join('');
+}
+
+function updatePhase(phaseId) {
+  const phases = mode === 'startup' ? STARTUP_PHASES : BUILDER_PHASES;
+  phases.forEach(p => {
+    const el = document.getElementById('phase_' + p.id);
+    if (!el) return;
+    el.classList.remove('active', 'done');
+    if (p.id === phaseId) el.classList.add('active');
+    else if (phases.findIndex(x => x.id === p.id) < phases.findIndex(x => x.id === phaseId)) {
+      el.classList.add('done');
+    }
+  });
+}
+
+function highlightPrinciple(text) {
+  const principles = mode === 'startup' ? STARTUP_PRINCIPLES : BUILDER_PRINCIPLES;
+  const items = document.querySelectorAll('.principle');
+  items.forEach((el, i) => {
+    el.classList.remove('highlight');
+    if (text && principles[i] && text.toLowerCase().includes(principles[i].title.toLowerCase().split(' ')[0])) {
+      el.classList.add('highlight');
+    }
+  });
+}
+
+function setBadge(text) {
+  document.getElementById('phaseBadge').textContent = text;
+}
+
+function showError(msg) {
+  const el = document.getElementById('errorMsg');
+  el.textContent = msg;
+  el.style.display = 'block';
+  setTimeout(() => el.style.display = 'none', 6000);
+}
+
+// ── Message Rendering ──────────────────────────────────────────────────────
+function renderMarkdown(text) {
+  // Detect DESIGN_DOC_START block
+  if (text.includes('DESIGN_DOC_START')) {
+    const parts = text.split('DESIGN_DOC_START');
+    const beforeDoc = parts[0].trim();
+    const docPart = parts[1] || '';
+    // Extract content between triple backticks
+    const match = docPart.match(/```[\w]*\n?([\s\S]*?)```/);
+    const docContent = match ? match[1].trim() : docPart.trim();
+    designDocText = docContent;
+    updatePhase('doc');
+    setBadge(t('done'));
+
+    return `<p>${parseInline(beforeDoc)}</p>
+      <div class="design-doc">${escapeHtml(docContent)}</div>
+      <button class="copy-btn" onclick="copyDoc()">${t('copyDoc')}</button>`;
+  }
+
+  // Simple markdown: bold, italic, headings, blockquote, hr
+  let html = text
+    .replace(/^### (.+)$/gm, '<strong>$1</strong>')
+    .replace(/^## (.+)$/gm, '<strong>$1</strong>')
+    .replace(/^# (.+)$/gm, '<strong>$1</strong>')
+    .replace(/^> (.+)$/gm, '<blockquote>$1</blockquote>')
+    .replace(/^---$/gm, '<hr>')
+    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+    .replace(/\*(.+?)\*/g, '<em>$1</em>')
+    .split('\n\n')
+    .map(para => para.trim() ? `<p>${para.replace(/\n/g, ' ')}</p>` : '')
+    .join('');
+
+  return html;
+}
+
+function parseInline(text) {
+  return text
+    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+    .replace(/\*(.+?)\*/g, '<em>$1</em>');
+}
+
+function escapeHtml(text) {
+  return text
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+}
+
+function appendMessage(role, content) {
+  const msgs = document.getElementById('messages');
+  const isUser = role === 'user';
+
+  const div = document.createElement('div');
+  div.className = `msg ${role}`;
+
+  const initials = isUser ? 'You' : 'YC';
+  div.innerHTML = `
+    <div class="avatar ${isUser ? 'human' : 'yc'}">${initials}</div>
+    <div class="bubble">${isUser ? parseInline(escapeHtml(content)) : renderMarkdown(content)}</div>
+  `;
+
+  msgs.appendChild(div);
+  msgs.scrollTop = msgs.scrollHeight;
+
+  // Auto-detect phase from content
+  if (!isUser) detectPhase(content);
+}
+
+function detectPhase(text) {
+  const t = text.toLowerCase();
+  if (mode === 'startup') {
+    if (t.includes('strongest evidence') || t.includes('demand reality') || t.includes('upset if it disappeared')) updatePhase('q1');
+    else if (t.includes('doing right now') || t.includes('status quo') || t.includes('workaround')) updatePhase('q2');
+    else if (t.includes('actual human') || t.includes('title') || t.includes('who needs this most')) updatePhase('q3');
+    else if (t.includes('smallest possible') || t.includes('narrowest') || t.includes('this week')) updatePhase('q4');
+    else if (t.includes('watched someone') || t.includes('surprised you') || t.includes('observation')) updatePhase('q5');
+    else if (t.includes('3 years') || t.includes('future') || t.includes('more essential')) updatePhase('q6');
+  } else {
+    if (t.includes('problem') || t.includes('constraint') || t.includes('whoa')) updatePhase('problem');
+    else if (t.includes('premise') || t.includes('assumption') || t.includes('what if')) updatePhase('premises');
+    else if (t.includes('approach') || t.includes('alternative')) updatePhase('alts');
+  }
+  highlightPrinciple(text);
+}
+
+function showTyping() {
+  const msgs = document.getElementById('messages');
+  const div = document.createElement('div');
+  div.className = 'msg assistant';
+  div.id = 'typing';
+  div.innerHTML = `
+    <div class="avatar yc">YC</div>
+    <div class="typing-indicator">
+      <div class="dot"></div><div class="dot"></div><div class="dot"></div>
+    </div>
+  `;
+  msgs.appendChild(div);
+  msgs.scrollTop = msgs.scrollHeight;
+}
+
+function removeTyping() {
+  const t = document.getElementById('typing');
+  if (t) t.remove();
+}
+
+function copyDoc() {
+  if (designDocText) {
+    navigator.clipboard.writeText(designDocText).then(() => {
+      const btn = document.querySelector('.copy-btn');
+      if (btn) { btn.textContent = t('copied'); setTimeout(() => btn.textContent = t('copyDoc'), 2000); }
+    });
+  }
+}
+
+// ── Session Management ─────────────────────────────────────────────────────
+async function startSession() {
+  const idea = document.getElementById('ideaInput').value.trim();
+  if (!idea) return;
+  if (!apiKey) {
+    showError(t('pleaseEnterKey').replace('{provider}', apiProvider === 'openai' ? 'OpenAI' : 'Claude'));
+    toggleSettings();
+    return;
+  }
+
+  document.getElementById('ideaScreen').style.display = 'none';
+  document.getElementById('messages').style.display = 'flex';
+  document.getElementById('inputBar').style.display = 'flex';
+  document.getElementById('sidebar').style.display = 'flex';
+
+  setupSidebar();
+  setBadge(mode === 'startup' ? 'Q1 / 6' : (lang === 'zh' ? '阶段 1' : 'Phase 1'));
+
+  const systemPrompt = getSystemPrompt(mode, idea);
+
+  // Kick off with an initial message from the user context
+  history = [];
+  history.push({ role: 'user', content: `My idea: ${idea}` });
+
+  showTyping();
+  setBadge(t('thinking'));
+
+  try {
+    const reply = await callAPI(systemPrompt, history);
+    removeTyping();
+    history.push({ role: 'assistant', content: reply });
+    appendMessage('assistant', reply);
+    setBadge(mode === 'startup' ? 'Q1 / 6' : (lang === 'zh' ? '阶段 1' : 'Phase 1'));
+    document.getElementById('chatInput').focus();
+  } catch (e) {
+    removeTyping();
+    showError('API error: ' + e.message);
+    setBadge(t('error'));
+  }
+}
+
+async function sendMessage() {
+  if (isLoading) return;
+  const input = document.getElementById('chatInput');
+  const text = input.value.trim();
+  if (!text) return;
+
+  input.value = '';
+  input.style.height = 'auto';
+
+  history.push({ role: 'user', content: text });
+  appendMessage('user', text);
+
+  const systemPrompt = getSystemPrompt(mode, '');
+  isLoading = true;
+  document.getElementById('sendBtn').disabled = true;
+  showTyping();
+  setBadge(t('thinking'));
+
+  try {
+    const reply = await callAPI(systemPrompt, history);
+    removeTyping();
+    history.push({ role: 'assistant', content: reply });
+    appendMessage('assistant', reply);
+    setBadge(designDocText ? t('done') : (mode === 'startup' ? t('inProgress') : t('building')));
+  } catch (e) {
+    removeTyping();
+    showError('API error: ' + e.message);
+    setBadge(t('error'));
+  } finally {
+    isLoading = false;
+    document.getElementById('sendBtn').disabled = false;
+    document.getElementById('chatInput').focus();
+  }
+}
+
+async function callAPI(system, messages) {
+  if (!apiKey) {
+    throw new Error('Please set your API Key first');
+  }
+
+  if (apiProvider === 'openai') {
+    // OpenAI Compatible API
+    const endpoint = apiEndpoint || 'https://api.openai.com/v1/chat/completions';
+    const model = apiModel || 'gpt-4o';
+
+    // Convert messages format (Claude uses system separately, OpenAI uses system message)
+    const openaiMessages = [
+      { role: 'system', content: system },
+      ...messages
+    ];
+
+    let response;
+    try {
+      if (useProxy) {
+        // Route through local CORS proxy
+        response = await fetch('http://localhost:3456/proxy', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            endpoint,
+            headers: { 'Authorization': `Bearer ${apiKey}` },
+            payload: {
+              model,
+              messages: openaiMessages,
+              max_tokens: 4000,
+              max_completion_tokens: 4000,
+              temperature: 0.7,
+            },
+          }),
+        });
+      } else {
+        // Direct call
+        response = await fetch(endpoint, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${apiKey}`,
+          },
+          body: JSON.stringify({
+            model,
+            messages: openaiMessages,
+            max_tokens: 4000,
+            max_completion_tokens: 4000,
+            temperature: 0.7,
+          }),
+        });
+      }
+    } catch (networkError) {
+      // Detect CORS or network issues
+      if (useProxy) {
+        throw new Error(
+          'Cannot connect to local proxy (localhost:3456). Make sure to run: node proxy.js (无法连接本地代理，请先运行 node proxy.js)'
+        );
+      }
+      throw new Error(
+        'Network error — browser may be blocked by CORS. Enable "Use Local CORS Proxy" and run node proxy.js. (网络错误：请启用本地代理并运行 node proxy.js)'
+      );
+    }
+
+    if (!response.ok) {
+      const err = await response.json().catch(() => ({}));
+      const msg = err.error?.message || '';
+      if (response.status === 401) {
+        throw new Error('API Key invalid or expired. Please check your key. (API Key 无效或已过期，请检查)');
+      } else if (response.status === 429) {
+        throw new Error('Rate limited — please wait a moment and try again. (请求过于频繁，请稍后重试)');
+      } else if (response.status === 404) {
+        throw new Error(`Model "${model}" not found or endpoint incorrect. (模型不存在或 endpoint 地址有误)`);
+      }
+      throw new Error(msg || `HTTP ${response.status}`);
+    }
+
+    const data = await response.json();
+    return data.choices[0]?.message?.content || '';
+  } else {
+    // Claude API
+    let response;
+    try {
+      response = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': apiKey,
+          'anthropic-version': '2023-06-01',
+          'anthropic-dangerous-direct-browser-access': 'true',
+        },
+        body: JSON.stringify({
+          model: 'claude-sonnet-4-20250514',
+          max_tokens: 4000,
+          temperature: 0.7,
+          system,
+          messages,
+        }),
+      });
+    } catch (networkError) {
+      throw new Error(
+        'Network error — browser may be blocked by CORS. (网络错误：浏览器可能受 CORS 限制)'
+      );
+    }
+
+    if (!response.ok) {
+      const err = await response.json().catch(() => ({}));
+      const msg = err.error?.message || '';
+      if (response.status === 401) {
+        throw new Error('API Key invalid or expired. Please check your Claude key. (API Key 无效或已过期)');
+      } else if (response.status === 429) {
+        throw new Error('Rate limited — please wait and try again. (请求过于频繁，请稍后重试)');
+      }
+      throw new Error(msg || `HTTP ${response.status}`);
+    }
+
+    const data = await response.json();
+    return data.content.map(b => b.text || '').join('');
+  }
+}
+
+function resetSession() {
+  mode = null;
+  history = [];
+  designDocText = null;
+  isLoading = false;
+
+  document.getElementById('welcomeScreen').style.display = 'flex';
+  document.getElementById('ideaScreen').style.display = 'none';
+  document.getElementById('messages').style.display = 'none';
+  document.getElementById('inputBar').style.display = 'none';
+  document.getElementById('sidebar').style.display = 'none';
+  document.getElementById('errorMsg').style.display = 'none';
+  document.getElementById('messages').innerHTML = '';
+  document.getElementById('ideaInput').value = '';
+  document.getElementById('chatInput').value = '';
+
+  // Restore API config inputs
+  const apiKeyInput = document.getElementById('apiKeyInput');
+  const endpointInput = document.getElementById('apiEndpoint');
+  const modelInput = document.getElementById('apiModel');
+  if (apiKeyInput) apiKeyInput.value = apiKey;
+  if (endpointInput) endpointInput.value = apiEndpoint;
+  if (modelInput) modelInput.value = apiModel;
+
+  setBadge(t('ready'));
+}
+
+function handleKey(e) {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    sendMessage();
+  }
+}
+
+function autoResize(el) {
+  el.style.height = 'auto';
+  el.style.height = Math.min(el.scrollHeight, 140) + 'px';
+}
+</script>
+</body>
+</html>
