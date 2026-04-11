@@ -2,11 +2,12 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>YC Office Hours</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;700&family=DM+Mono:wght@300;400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
-<style>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;700&family=DM+Mono:wght@300;400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <style>
   :root {
     --bg: #0a0906;
     --surface: #12100d;
@@ -31,9 +32,11 @@
     font-family: 'DM Sans', sans-serif;
     font-size: 15px;
     height: 100vh;
+    height: 100dvh;
     display: flex;
     flex-direction: column;
     overflow: hidden;
+    touch-action: manipulation;
   }
 
   /* ── Header ── */
@@ -45,6 +48,7 @@
     border-bottom: 1px solid var(--border);
     background: var(--surface);
     flex-shrink: 0;
+    position: relative;
   }
 
   .logo {
@@ -52,6 +56,21 @@
     align-items: center;
     gap: 10px;
   }
+
+  .btn-back {
+    background: none;
+    border: none;
+    color: var(--text-dim);
+    font-size: 20px;
+    cursor: pointer;
+    padding: 4px 8px;
+    display: none;
+    transition: color 0.15s;
+    position: absolute;
+    left: 8px;
+  }
+  .btn-back:hover { color: var(--gold); }
+  .btn-back.visible { display: block; }
 
   .logo-mark {
     width: 32px; height: 32px;
@@ -217,8 +236,11 @@
 
   .bubble p { margin-bottom: 8px; }
   .bubble p:last-child { margin-bottom: 0; }
-  .bubble ul { padding-left: 18px; margin-bottom: 8px; }
+  .bubble ul, .bubble ol { padding-left: 18px; margin-bottom: 8px; }
   .bubble li { margin-bottom: 4px; }
+  .bubble pre { background: var(--bg); padding: 12px; border-radius: 4px; overflow-x: auto; margin: 8px 0; border: 1px solid var(--border); }
+  .bubble code { font-family: 'DM Mono', monospace; font-size: 13px; background: rgba(0,0,0,0.2); padding: 2px 4px; border-radius: 3px; }
+  .bubble pre code { background: none; padding: 0; }
   .bubble blockquote {
     border-left: 2px solid var(--gold-dim);
     padding-left: 12px;
@@ -261,36 +283,19 @@
   }
   .copy-btn:hover { background: rgba(201,147,58,0.2); }
 
-  /* Typing indicator */
-  .typing-indicator {
-    display: flex;
-    gap: 4px;
-    align-items: center;
-    padding: 12px 16px;
-    background: var(--surface2);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    border-top-left-radius: 2px;
-    width: fit-content;
+  /* Streaming indicator */
+  .bubble.streaming::after {
+    content: '▌';
+    animation: blink 1s step-end infinite;
+    color: var(--gold);
+    margin-left: 4px;
   }
-
-  .dot {
-    width: 6px; height: 6px;
-    background: var(--gold-dim);
-    border-radius: 50%;
-    animation: pulse 1.2s ease-in-out infinite;
-  }
-  .dot:nth-child(2) { animation-delay: 0.2s; }
-  .dot:nth-child(3) { animation-delay: 0.4s; }
-
-  @keyframes pulse {
-    0%, 80%, 100% { transform: scale(0.7); opacity: 0.4; }
-    40% { transform: scale(1); opacity: 1; }
-  }
+  @keyframes blink { 50% { opacity: 0; } }
 
   /* ── Input Bar ── */
   .input-bar {
     padding: 16px 24px;
+    padding-bottom: calc(16px + env(safe-area-inset-bottom, 0px));
     border-top: 1px solid var(--border);
     background: var(--surface);
     display: flex;
@@ -523,6 +528,7 @@
     font-family: 'Playfair Display', serif;
     font-size: 24px;
     color: var(--text);
+    text-align: center;
   }
 
   .idea-label span { color: var(--gold); }
@@ -657,9 +663,113 @@
   }
   .btn-settings:hover { background: rgba(201,147,58,0.15); }
 
+  /* ── Mobile Drawer (sidebar) ── */
+  .drawer-fab {
+    display: none;
+    position: fixed;
+    bottom: calc(80px + env(safe-area-inset-bottom, 0px));
+    right: 16px;
+    width: 44px; height: 44px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 50%;
+    color: var(--gold);
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    z-index: 50;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+    transition: all 0.2s;
+  }
+  .drawer-fab:hover { border-color: var(--gold-dim); }
+
+  .drawer-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.5);
+    z-index: 60;
+    animation: fadeIn 0.2s ease;
+  }
+  .drawer-overlay.open { display: block; }
+
+  .drawer-sheet {
+    display: none;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    border-radius: 16px 16px 0 0;
+    max-height: 55vh;
+    overflow-y: auto;
+    z-index: 61;
+    padding: 8px 20px calc(20px + env(safe-area-inset-bottom, 0px));
+    animation: sheetUp 0.25s ease;
+    box-shadow: 0 -8px 32px rgba(0,0,0,0.4);
+  }
+  .drawer-sheet.open { display: block; }
+
+  .drawer-handle {
+    width: 36px; height: 4px;
+    background: var(--border);
+    border-radius: 2px;
+    margin: 0 auto 16px;
+  }
+
+  @keyframes sheetUp {
+    from { transform: translateY(100%); }
+    to   { transform: translateY(0); }
+  }
+
   /* Responsive: hide sidebar on small screens */
-  @media (max-width: 640px) {
-    .sidebar { display: none; }
+  @media (max-width: 768px) {
+    .sidebar { display: none !important; }
+    .drawer-fab.visible { display: flex; align-items: center; justify-content: center; }
+
+    /* Session Mode Mobile UI */
+    body.in-session .header-right { display: none; }
+    body.in-session header { justify-content: center; }
+
+    /* Header */
+    header { padding: 10px 16px; }
+    .logo-sub { display: none; }
+    .phase-badge { font-size: 10px; padding: 2px 8px; }
+    .btn-reset, .btn-settings { font-size: 11px; padding: 4px 8px; }
+
+    /* Welcome screen */
+    .welcome { padding: 24px 16px; gap: 20px; }
+    .welcome-title { font-size: 28px; }
+    .welcome-sub { font-size: 14px; }
+    .mode-cards { flex-direction: column; align-items: center; max-width: 100%; }
+    .mode-card { width: 100%; max-width: 360px; padding: 16px 18px; }
+
+    /* Idea input screen */
+    .idea-screen { padding: 24px 16px; gap: 16px; }
+    .idea-label { font-size: 20px; }
+    .idea-input { max-width: 100%; height: 100px; padding: 14px; }
+
+    /* Chat */
+    .messages { padding: 16px; gap: 14px; }
+    .msg { gap: 8px; max-width: 100%; }
+    .bubble { padding: 10px 14px; font-size: 14px; }
+    .avatar { width: 28px; height: 28px; font-size: 11px; }
+
+    /* Input bar */
+    .input-bar { padding: 12px 16px; padding-bottom: calc(12px + env(safe-area-inset-bottom, 0px)); gap: 8px; }
+    textarea { font-size: 16px; } /* Prevent iOS zoom on focus */
+
+    /* Settings modal — bottom sheet style */
+    .settings-overlay { align-items: flex-end; padding: 0; }
+    .settings-panel {
+      border-radius: 16px 16px 0 0;
+      max-width: 100%;
+      max-height: 85vh;
+      padding: 20px;
+      padding-bottom: calc(20px + env(safe-area-inset-bottom, 0px));
+    }
   }
 </style>
 </head>
@@ -670,7 +780,7 @@
     <div class="logo-mark">YC</div>
     <div>
       <div class="logo-text">Office Hours</div>
-      <div class="logo-sub" id="poweredByLabel">Powered by Claude</div>
+      <div class="logo-sub" id="poweredByLabel" style="display:none">Powered by Claude</div>
     </div>
   </div>
   <div class="header-right">
@@ -679,6 +789,7 @@
     <button class="btn-settings" onclick="toggleSettings()" id="apiKeyBtn">⚙ Settings</button>
     <button class="btn-reset" onclick="resetSession()">↺ Reset</button>
   </div>
+  <button class="btn-back" id="backBtn" onclick="goBack()">←</button>
 </header>
 
 <main>
@@ -732,6 +843,14 @@
   </div>
 </main>
 
+<!-- MOBILE DRAWER -->
+<button class="drawer-fab" id="drawerFab" onclick="toggleDrawer()">Q1</button>
+<div class="drawer-overlay" id="drawerOverlay" onclick="closeDrawer()"></div>
+<div class="drawer-sheet" id="drawerSheet">
+  <div class="drawer-handle"></div>
+  <div id="drawerContent"></div>
+</div>
+
 <!-- SETTINGS MODAL -->
 <div class="settings-overlay" id="settingsOverlay" onclick="if(event.target===this)closeSettings()">
   <div class="settings-panel">
@@ -767,7 +886,7 @@
 
     <!-- Custom Endpoint (OpenAI only) -->
     <div id="endpointGroup" style="margin-bottom: 10px; display: none;">
-      <label id="endpointLabel" style="font-size: 11px; color: var(--text-dim); display: block; margin-bottom: 4px;">API Endpoint (optional)</label>
+      <label id="endpointLabel" data-i18n="endpointLabel" style="font-size: 11px; color: var(--text-dim); display: block; margin-bottom: 4px;">API Endpoint (optional)</label>
       <input
         type="text"
         id="apiEndpoint"
@@ -775,7 +894,7 @@
         style="width: 100%; background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius); color: var(--text); font-family: 'DM Mono', monospace; font-size: 13px; padding: 10px 12px; outline: none;"
         oninput="saveApiConfig()"
       >
-      <div style="font-size: 10px; color: var(--text-dim); margin-top: 4px;">Default: https://api.openai.com/v1/chat/completions</div>
+      <div data-i18n="endpointDefault" style="font-size: 10px; color: var(--text-dim); margin-top: 4px;">Default: https://api.openai.com/v1/chat/completions</div>
     </div>
 
     <!-- Model (OpenAI only) -->
@@ -1049,6 +1168,7 @@ document.addEventListener('DOMContentLoaded', () => {
   applyLang();
   updateApiProviderUI();
   updateApiKeyButton();
+  loadSessionState();
 });
 
 const STARTUP_PHASES = [
@@ -1196,10 +1316,39 @@ STYLE: Be enthusiastic and specific. Riff on ideas. Bring adjacent ideas they mi
 }
 
 // ── UI Helpers ─────────────────────────────────────────────────────────────
+function goBack() {
+  // If in chat, go back to idea screen; if in idea screen, go to welcome
+  const ideaScreen = document.getElementById('ideaScreen');
+  const messages = document.getElementById('messages');
+
+  if (messages.style.display !== 'none') {
+    // In chat → back to idea screen (keep mode selected)
+    messages.style.display = 'none';
+    document.getElementById('inputBar').style.display = 'none';
+    document.getElementById('sidebar').style.display = 'none';
+    document.getElementById('drawerFab').classList.remove('visible');
+    document.getElementById('backBtn').classList.remove('visible');
+    document.body.classList.remove('in-session');
+    closeDrawer();
+    ideaScreen.style.display = 'flex';
+    history = [];
+    designDocText = null;
+    localStorage.removeItem('office_hours_session');
+    setBadge(t('ready'));
+  } else if (ideaScreen.style.display !== 'none') {
+    // In idea screen → back to welcome
+    ideaScreen.style.display = 'none';
+    document.getElementById('welcomeScreen').style.display = 'flex';
+    document.getElementById('backBtn').classList.remove('visible');
+    mode = null;
+  }
+}
+
 function selectMode(m) {
   mode = m;
   document.getElementById('welcomeScreen').style.display = 'none';
   document.getElementById('ideaScreen').style.display = 'flex';
+  document.getElementById('backBtn').classList.add('visible');
   document.getElementById('modeLabel').textContent = m === 'startup' ? t('startupIdea') : t('project');
 }
 
@@ -1223,6 +1372,10 @@ function setupSidebar() {
         ${p.text}
       </div>`
     ).join('');
+
+  // Show mobile drawer FAB
+  document.getElementById('drawerFab').classList.add('visible');
+  updateDrawerFab();
 }
 
 function updatePhase(phaseId) {
@@ -1236,6 +1389,7 @@ function updatePhase(phaseId) {
       el.classList.add('done');
     }
   });
+  updateDrawerFab();
 }
 
 function highlightPrinciple(text) {
@@ -1262,37 +1416,26 @@ function showError(msg) {
 
 // ── Message Rendering ──────────────────────────────────────────────────────
 function renderMarkdown(text) {
-  // Detect DESIGN_DOC_START block
+  if (!text) return '';
   if (text.includes('DESIGN_DOC_START')) {
     const parts = text.split('DESIGN_DOC_START');
-    const beforeDoc = parts[0].trim();
+    const beforeDoc = parts[0] || '';
     const docPart = parts[1] || '';
-    // Extract content between triple backticks
-    const match = docPart.match(/```[\w]*\n?([\s\S]*?)```/);
+    const match = docPart.match(/```[\w]*\n?([\s\S]*?)(```|$)/);
     const docContent = match ? match[1].trim() : docPart.trim();
-    designDocText = docContent;
-    updatePhase('doc');
-    setBadge(t('done'));
+    
+    if (docContent.length > 50) {
+      designDocText = docContent;
+      updatePhase('doc');
+      setBadge(t('done'));
+    }
 
-    return `<p>${parseInline(beforeDoc)}</p>
+    return `<div class="md-content">${marked.parse(beforeDoc.trim())}</div>
       <div class="design-doc">${escapeHtml(docContent)}</div>
       <button class="copy-btn" onclick="copyDoc()">${t('copyDoc')}</button>`;
   }
 
-  // Simple markdown: bold, italic, headings, blockquote, hr
-  let html = text
-    .replace(/^### (.+)$/gm, '<strong>$1</strong>')
-    .replace(/^## (.+)$/gm, '<strong>$1</strong>')
-    .replace(/^# (.+)$/gm, '<strong>$1</strong>')
-    .replace(/^> (.+)$/gm, '<blockquote>$1</blockquote>')
-    .replace(/^---$/gm, '<hr>')
-    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
-    .replace(/\*(.+?)\*/g, '<em>$1</em>')
-    .split('\n\n')
-    .map(para => para.trim() ? `<p>${para.replace(/\n/g, ' ')}</p>` : '')
-    .join('');
-
-  return html;
+  return marked.parse(text);
 }
 
 function parseInline(text) {
@@ -1345,25 +1488,7 @@ function detectPhase(text) {
   highlightPrinciple(text);
 }
 
-function showTyping() {
-  const msgs = document.getElementById('messages');
-  const div = document.createElement('div');
-  div.className = 'msg assistant';
-  div.id = 'typing';
-  div.innerHTML = `
-    <div class="avatar yc">YC</div>
-    <div class="typing-indicator">
-      <div class="dot"></div><div class="dot"></div><div class="dot"></div>
-    </div>
-  `;
-  msgs.appendChild(div);
-  msgs.scrollTop = msgs.scrollHeight;
-}
-
-function removeTyping() {
-  const t = document.getElementById('typing');
-  if (t) t.remove();
-}
+// Typing indicator replaced by streaming text
 
 function copyDoc() {
   if (designDocText) {
@@ -1388,28 +1513,40 @@ async function startSession() {
   document.getElementById('messages').style.display = 'flex';
   document.getElementById('inputBar').style.display = 'flex';
   document.getElementById('sidebar').style.display = 'flex';
+  document.body.classList.add('in-session');
 
   setupSidebar();
   setBadge(mode === 'startup' ? 'Q1 / 6' : (lang === 'zh' ? '阶段 1' : 'Phase 1'));
 
   const systemPrompt = getSystemPrompt(mode, idea);
 
-  // Kick off with an initial message from the user context
   history = [];
   history.push({ role: 'user', content: `My idea: ${idea}` });
+  saveSessionState();
 
-  showTyping();
-  setBadge(t('thinking'));
+  const msgs = document.getElementById('messages');
+  const div = document.createElement('div');
+  div.className = `msg assistant`;
+  div.innerHTML = `<div class="avatar yc">YC</div><div class="bubble streaming"></div>`;
+  msgs.appendChild(div);
+  msgs.scrollTop = msgs.scrollHeight;
+
+  const onChunk = (text) => {
+    div.querySelector('.bubble').innerHTML = renderMarkdown(text);
+    msgs.scrollTop = msgs.scrollHeight;
+  };
 
   try {
-    const reply = await callAPI(systemPrompt, history);
-    removeTyping();
+    const reply = await callAPI(systemPrompt, history, onChunk);
+    div.querySelector('.bubble').innerHTML = renderMarkdown(reply);
+    div.querySelector('.bubble').classList.remove('streaming');
     history.push({ role: 'assistant', content: reply });
-    appendMessage('assistant', reply);
+    detectPhase(reply);
+    saveSessionState();
     setBadge(mode === 'startup' ? 'Q1 / 6' : (lang === 'zh' ? '阶段 1' : 'Phase 1'));
     document.getElementById('chatInput').focus();
   } catch (e) {
-    removeTyping();
+    div.remove();
     showError('API error: ' + e.message);
     setBadge(t('error'));
   }
@@ -1425,22 +1562,35 @@ async function sendMessage() {
   input.style.height = 'auto';
 
   history.push({ role: 'user', content: text });
+  saveSessionState();
   appendMessage('user', text);
 
   const systemPrompt = getSystemPrompt(mode, '');
   isLoading = true;
   document.getElementById('sendBtn').disabled = true;
-  showTyping();
-  setBadge(t('thinking'));
+
+  const msgs = document.getElementById('messages');
+  const div = document.createElement('div');
+  div.className = `msg assistant`;
+  div.innerHTML = `<div class="avatar yc">YC</div><div class="bubble streaming">...</div>`;
+  msgs.appendChild(div);
+  msgs.scrollTop = msgs.scrollHeight;
+
+  const onChunk = (tChunk) => {
+    div.querySelector('.bubble').innerHTML = renderMarkdown(tChunk);
+    msgs.scrollTop = msgs.scrollHeight;
+  };
 
   try {
-    const reply = await callAPI(systemPrompt, history);
-    removeTyping();
+    const reply = await callAPI(systemPrompt, history, onChunk);
+    div.querySelector('.bubble').innerHTML = renderMarkdown(reply);
+    div.querySelector('.bubble').classList.remove('streaming');
     history.push({ role: 'assistant', content: reply });
-    appendMessage('assistant', reply);
+    detectPhase(reply);
+    saveSessionState();
     setBadge(designDocText ? t('done') : (mode === 'startup' ? t('inProgress') : t('building')));
   } catch (e) {
-    removeTyping();
+    div.remove();
     showError('API error: ' + e.message);
     setBadge(t('error'));
   } finally {
@@ -1450,85 +1600,89 @@ async function sendMessage() {
   }
 }
 
-async function callAPI(system, messages) {
+async function callAPI(system, messages, onChunk) {
   if (!apiKey) {
     throw new Error('Please set your API Key first');
   }
 
   if (apiProvider === 'openai') {
-    // OpenAI Compatible API
     const endpoint = apiEndpoint || 'https://api.openai.com/v1/chat/completions';
     const model = apiModel || 'gpt-4o';
-
-    // Convert messages format (Claude uses system separately, OpenAI uses system message)
     const openaiMessages = [
       { role: 'system', content: system },
       ...messages
     ];
 
+    const payload = {
+      model,
+      messages: openaiMessages,
+      max_tokens: 4000,
+      temperature: 0.7,
+      stream: true,
+    };
+
     let response;
     try {
       if (useProxy) {
-        // Route through local CORS proxy
         response = await fetch('http://localhost:3456/proxy', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             endpoint,
             headers: { 'Authorization': `Bearer ${apiKey}` },
-            payload: {
-              model,
-              messages: openaiMessages,
-              max_tokens: 4000,
-              max_completion_tokens: 4000,
-              temperature: 0.7,
-            },
+            payload,
           }),
         });
       } else {
-        // Direct call
         response = await fetch(endpoint, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${apiKey}`,
           },
-          body: JSON.stringify({
-            model,
-            messages: openaiMessages,
-            max_tokens: 4000,
-            max_completion_tokens: 4000,
-            temperature: 0.7,
-          }),
+          body: JSON.stringify(payload),
         });
       }
     } catch (networkError) {
-      // Detect CORS or network issues
-      if (useProxy) {
-        throw new Error(
-          'Cannot connect to local proxy (localhost:3456). Make sure to run: node proxy.js (无法连接本地代理，请先运行 node proxy.js)'
-        );
-      }
-      throw new Error(
-        'Network error — browser may be blocked by CORS. Enable "Use Local CORS Proxy" and run node proxy.js. (网络错误：请启用本地代理并运行 node proxy.js)'
-      );
+      if (useProxy) throw new Error('Cannot connect to local proxy (localhost:3456). Make sure to run: node proxy.js (无法连接本地代理，请先运行 node proxy.js)');
+      throw new Error('Network error — browser may be blocked by CORS. Enable "Use Local CORS Proxy" and run node proxy.js. (网络错误：请启用本地代理并运行 node proxy.js)');
     }
 
     if (!response.ok) {
       const err = await response.json().catch(() => ({}));
       const msg = err.error?.message || '';
-      if (response.status === 401) {
-        throw new Error('API Key invalid or expired. Please check your key. (API Key 无效或已过期，请检查)');
-      } else if (response.status === 429) {
-        throw new Error('Rate limited — please wait a moment and try again. (请求过于频繁，请稍后重试)');
-      } else if (response.status === 404) {
-        throw new Error(`Model "${model}" not found or endpoint incorrect. (模型不存在或 endpoint 地址有误)`);
-      }
+      if (response.status === 401) throw new Error('API Key invalid or expired. Please check your key. (API Key 无效或已过期，请检查)');
+      if (response.status === 429) throw new Error('Rate limited — please wait a moment and try again. (请求过于频繁，请稍后重试)');
+      if (response.status === 404) throw new Error(`Model "${model}" not found or endpoint incorrect. (模型不存在或 endpoint 地址有误)`);
       throw new Error(msg || `HTTP ${response.status}`);
     }
 
-    const data = await response.json();
-    return data.choices[0]?.message?.content || '';
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder('utf-8');
+    let fullText = '';
+    let buffer = '';
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buffer += decoder.decode(value, { stream: true });
+      let lines = buffer.split('\n');
+      buffer = lines.pop(); // keep partial line in buffer
+
+      for (let line of lines) {
+        line = line.trim();
+        if (line.startsWith('data: ') && line !== 'data: [DONE]') {
+          try {
+            const data = JSON.parse(line.slice(6));
+            if (data.choices && data.choices[0].delta && data.choices[0].delta.content) {
+              fullText += data.choices[0].delta.content;
+              if (onChunk) onChunk(fullText);
+            }
+          } catch(e) {}
+        }
+      }
+    }
+    return fullText;
   } else {
     // Claude API
     let response;
@@ -1542,33 +1696,95 @@ async function callAPI(system, messages) {
           'anthropic-dangerous-direct-browser-access': 'true',
         },
         body: JSON.stringify({
-          model: 'claude-sonnet-4-20250514',
+          model: 'claude-3-5-sonnet-20241022',
           max_tokens: 4000,
           temperature: 0.7,
           system,
           messages,
+          stream: true,
         }),
       });
     } catch (networkError) {
-      throw new Error(
-        'Network error — browser may be blocked by CORS. (网络错误：浏览器可能受 CORS 限制)'
-      );
+      throw new Error('Network error — browser may be blocked by CORS. (网络错误：浏览器可能受 CORS 限制)');
     }
 
     if (!response.ok) {
       const err = await response.json().catch(() => ({}));
       const msg = err.error?.message || '';
-      if (response.status === 401) {
-        throw new Error('API Key invalid or expired. Please check your Claude key. (API Key 无效或已过期)');
-      } else if (response.status === 429) {
-        throw new Error('Rate limited — please wait and try again. (请求过于频繁，请稍后重试)');
-      }
+      if (response.status === 401) throw new Error('API Key invalid or expired. Please check your Claude key. (API Key 无效或已过期)');
+      if (response.status === 429) throw new Error('Rate limited — please wait and try again. (请求过于频繁，请稍后重试)');
       throw new Error(msg || `HTTP ${response.status}`);
     }
 
-    const data = await response.json();
-    return data.content.map(b => b.text || '').join('');
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder('utf-8');
+    let fullText = '';
+    let buffer = '';
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buffer += decoder.decode(value, { stream: true });
+      let lines = buffer.split('\n');
+      buffer = lines.pop();
+
+      for (let line of lines) {
+        line = line.trim();
+        if (line.startsWith('data: ')) {
+          try {
+             // For Anthropic API streaming format, text arrives in content_block_delta
+            const data = JSON.parse(line.slice(6));
+            if (data.type === 'content_block_delta' && data.delta && data.delta.text) {
+              fullText += data.delta.text;
+              if (onChunk) onChunk(fullText);
+            }
+          } catch (e) {}
+        }
+      }
+    }
+    return fullText;
   }
+}
+
+// ── Session Persistence ───────────────────────────────────────────────────
+function saveSessionState() {
+  const state = { mode, history, designDocText };
+  localStorage.setItem('office_hours_session', JSON.stringify(state));
+}
+
+function loadSessionState() {
+  const saved = localStorage.getItem('office_hours_session');
+  if (saved) {
+    try {
+      const state = JSON.parse(saved);
+      if (state.mode && state.history && state.history.length > 0) {
+        mode = state.mode;
+        history = state.history;
+        designDocText = state.designDocText || null;
+        
+        document.getElementById('welcomeScreen').style.display = 'none';
+        document.getElementById('ideaScreen').style.display = 'none';
+        document.getElementById('messages').style.display = 'flex';
+        document.getElementById('inputBar').style.display = 'flex';
+        document.getElementById('sidebar').style.display = 'flex';
+        document.getElementById('backBtn').classList.add('visible');
+        document.body.classList.add('in-session');
+        
+        setupSidebar();
+        
+        document.getElementById('messages').innerHTML = '';
+        history.forEach(m => {
+          if (m.role === 'user' || m.role === 'assistant') {
+            appendMessage(m.role, m.content);
+          }
+        });
+        
+        setBadge(designDocText ? t('done') : (mode === 'startup' ? t('inProgress') : t('building')));
+        return true;
+      }
+    } catch(e) {}
+  }
+  return false;
 }
 
 function resetSession() {
@@ -1576,6 +1792,8 @@ function resetSession() {
   history = [];
   designDocText = null;
   isLoading = false;
+  localStorage.removeItem('office_hours_session');
+  document.body.classList.remove('in-session');
 
   document.getElementById('welcomeScreen').style.display = 'flex';
   document.getElementById('ideaScreen').style.display = 'none';
@@ -1596,6 +1814,41 @@ function resetSession() {
   if (modelInput) modelInput.value = apiModel;
 
   setBadge(t('ready'));
+}
+
+// ── Mobile Drawer ──────────────────────────────────────────────────────────
+function toggleDrawer() {
+  const overlay = document.getElementById('drawerOverlay');
+  const sheet = document.getElementById('drawerSheet');
+  const isOpen = sheet.classList.contains('open');
+  if (isOpen) {
+    closeDrawer();
+  } else {
+    // Populate drawer with sidebar content
+    const sidebar = document.getElementById('sidebar');
+    const content = document.getElementById('drawerContent');
+    if (sidebar && content) content.innerHTML = sidebar.innerHTML;
+    overlay.classList.add('open');
+    sheet.classList.add('open');
+  }
+}
+
+function closeDrawer() {
+  document.getElementById('drawerOverlay').classList.remove('open');
+  document.getElementById('drawerSheet').classList.remove('open');
+}
+
+function updateDrawerFab() {
+  const fab = document.getElementById('drawerFab');
+  if (!fab) return;
+  const phases = mode === 'startup' ? STARTUP_PHASES : BUILDER_PHASES;
+  const active = document.querySelector('.progress-item.active .pip');
+  if (active) {
+    const activeItem = active.closest('.progress-item');
+    const label = activeItem ? activeItem.querySelector('span').textContent : '';
+    // Extract short label like "Q1" or phase number
+    fab.textContent = label.split('—')[0].trim().split(' ')[0] || '?';
+  }
 }
 
 function handleKey(e) {
