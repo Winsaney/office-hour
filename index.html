@@ -771,6 +771,17 @@
       padding-bottom: calc(20px + env(safe-area-inset-bottom, 0px));
     }
   }
+
+  /* ── History Modal ── */
+  .history-item { background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px; cursor: pointer; transition: all 0.2s; position: relative; text-align: left; }
+  .history-item:hover { border-color: var(--gold-dim); background: rgba(201,147,58,0.04); }
+  .history-item-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+  .history-item-date { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--text-dim); }
+  .history-item-mode { font-family: 'DM Mono', monospace; font-size: 10px; color: var(--gold); border: 1px solid var(--gold-dim); padding: 2px 6px; border-radius: 12px; background: rgba(201,147,58,0.1); }
+  .history-item-idea { font-size: 13px; color: var(--text); line-height: 1.5; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; padding-right: 30px; }
+  .btn-delete-hist { position: absolute; bottom: 12px; right: 12px; background: none; border: none; color: var(--red); font-size: 16px; cursor: pointer; opacity: 0.6; padding: 4px; }
+  .btn-delete-hist:hover { opacity: 1; }
+  .empty-history { text-align: center; color: var(--text-dim); font-size: 13px; padding: 20px 0; }
 </style>
 </head>
 <body>
@@ -785,6 +796,7 @@
   </div>
   <div class="header-right">
     <div class="phase-badge" id="phaseBadge">Ready</div>
+    <button class="btn-reset" onclick="openHistory()" id="historyBtn" data-i18n="historyBtn">🕓 History</button>
     <button class="btn-reset" onclick="switchLang()" id="langBtn" style="font-size: 12px;">中文</button>
     <button class="btn-settings" onclick="toggleSettings()" id="apiKeyBtn">⚙ Settings</button>
     <button class="btn-reset" onclick="resetSession()">↺ Reset</button>
@@ -849,6 +861,19 @@
 <div class="drawer-sheet" id="drawerSheet">
   <div class="drawer-handle"></div>
   <div id="drawerContent"></div>
+</div>
+
+<!-- HISTORY MODAL -->
+<div class="settings-overlay" id="historyOverlay" onclick="if(event.target===this)closeHistory()">
+  <div class="settings-panel">
+    <div class="settings-header">
+      <div class="settings-title" data-i18n="historyTitle">🕓 History</div>
+      <button class="settings-close" onclick="closeHistory()">×</button>
+    </div>
+    <div id="historyList" style="display: flex; flex-direction: column; gap: 12px;">
+      <!-- List injected by JS -->
+    </div>
+  </div>
 </div>
 
 <!-- SETTINGS MODAL -->
@@ -939,6 +964,7 @@ let mode = null;          // 'startup' | 'builder'
 let history = [];         // [{role, content}]
 let isLoading = false;
 let designDocText = null;
+let sessionId = null;
 
 // API Configuration
 let apiProvider = localStorage.getItem('api_provider') || 'claude'; // 'claude' | 'openai'
@@ -984,6 +1010,9 @@ const I18N = {
     langToggle: '中文',
     settingsTitle: '⚙ Settings',
     settingsBtn: '⚙ Settings',
+    historyBtn: '🕓 History',
+    historyTitle: '🕓 History',
+    emptyHistory: 'No past sessions found.',
   },
   zh: {
     welcomeTitle: '你在做<br><span>什么？</span>',
@@ -1019,6 +1048,9 @@ const I18N = {
     langToggle: 'EN',
     settingsTitle: '⚙ 设置',
     settingsBtn: '⚙ 设置',
+    historyBtn: '🕓 历史',
+    historyTitle: '🕓 历史记录',
+    emptyHistory: '暂无历史记录',
   },
 };
 
@@ -1332,6 +1364,7 @@ function goBack() {
     closeDrawer();
     ideaScreen.style.display = 'flex';
     history = [];
+    sessionId = null;
     designDocText = null;
     localStorage.removeItem('office_hours_session');
     setBadge(t('ready'));
@@ -1746,10 +1779,97 @@ async function callAPI(system, messages, onChunk) {
   }
 }
 
+// ── History Management ────────────────────────────────────────────────────
+function openHistory() {
+  document.getElementById('historyOverlay').classList.add('open');
+  renderHistory();
+}
+
+function closeHistory() {
+  document.getElementById('historyOverlay').classList.remove('open');
+}
+
+function renderHistory() {
+  const list = document.getElementById('historyList');
+  let histArr = [];
+  try {
+    const raw = localStorage.getItem('office_hours_history');
+    if (raw) histArr = JSON.parse(raw);
+  } catch(e) {}
+
+  if (histArr.length === 0) {
+    list.innerHTML = `<div class="empty-history">${t('emptyHistory')}</div>`;
+    return;
+  }
+
+  list.innerHTML = histArr.map(s => {
+    const dateStr = new Date(s.timestamp || Date.now()).toLocaleDateString() + ' ' + new Date(s.timestamp || Date.now()).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+    const ideaText = s.history[0]?.content.replace('My idea: ', '') || 'Workspace...';
+    let modeText = '';
+    if (lang === 'zh') modeText = s.mode === 'startup' ? '创业' : '创作者';
+    else modeText = s.mode === 'startup' ? 'Startup' : 'Builder';
+    
+    return `
+      <div class="history-item" onclick="loadHistorySession('${s.id}')">
+        <div class="history-item-header">
+          <span class="history-item-mode">${modeText}</span>
+          <span class="history-item-date">${dateStr}</span>
+        </div>
+        <div class="history-item-idea">${escapeHtml(ideaText)}</div>
+        <button class="btn-delete-hist" onclick="event.stopPropagation(); deleteHistorySession('${s.id}')">×</button>
+      </div>
+    `;
+  }).join('');
+}
+
+function deleteHistorySession(id) {
+  let histArr = [];
+  try {
+    const raw = localStorage.getItem('office_hours_history');
+    if (raw) histArr = JSON.parse(raw);
+  } catch(e) {}
+  
+  histArr = histArr.filter(s => s.id !== id);
+  localStorage.setItem('office_hours_history', JSON.stringify(histArr));
+  
+  if (sessionId === id) resetSession();
+  renderHistory();
+}
+
+function loadHistorySession(id) {
+  let histArr = [];
+  try {
+    const raw = localStorage.getItem('office_hours_history');
+    if (raw) histArr = JSON.parse(raw);
+  } catch(e) {}
+  
+  const saved = histArr.find(s => s.id === id);
+  if (saved) {
+    localStorage.setItem('office_hours_session', JSON.stringify(saved));
+    closeHistory();
+    loadSessionState();
+  }
+}
+
 // ── Session Persistence ───────────────────────────────────────────────────
 function saveSessionState() {
-  const state = { mode, history, designDocText };
+  if (!sessionId) sessionId = Date.now().toString();
+  const state = { id: sessionId, mode, history, designDocText, timestamp: Date.now() };
+  
   localStorage.setItem('office_hours_session', JSON.stringify(state));
+  
+  let histArr = [];
+  try {
+    const raw = localStorage.getItem('office_hours_history');
+    if (raw) histArr = JSON.parse(raw);
+  } catch(e) {}
+  
+  const idx = histArr.findIndex(s => s.id === sessionId);
+  if (idx >= 0) histArr[idx] = state;
+  else histArr.unshift(state);
+  
+  histArr = histArr.slice(0, 50);
+  localStorage.setItem('office_hours_history', JSON.stringify(histArr));
 }
 
 function loadSessionState() {
@@ -1758,6 +1878,7 @@ function loadSessionState() {
     try {
       const state = JSON.parse(saved);
       if (state.mode && state.history && state.history.length > 0) {
+        sessionId = state.id || Date.now().toString();
         mode = state.mode;
         history = state.history;
         designDocText = state.designDocText || null;
@@ -1791,6 +1912,7 @@ function resetSession() {
   mode = null;
   history = [];
   designDocText = null;
+  sessionId = null;
   isLoading = false;
   localStorage.removeItem('office_hours_session');
   document.body.classList.remove('in-session');
