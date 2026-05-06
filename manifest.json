@@ -1,0 +1,25 @@
+{
+  "name": "YC Office Hours",
+  "short_name": "Office Hours",
+  "description": "A YC-style partner to pressure-test your startup idea",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0a0906",
+  "theme_color": "#c9933a",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}
