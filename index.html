@@ -1947,9 +1947,18 @@ async function deleteHistorySession(id) {
 async function loadHistorySession(id) {
   let saved = null;
   if (currentUser) {
-    const { data } = await sb.from('sessions').select('*').eq('id', id).single();
-    if (data) {
+    const { data, error } = await sb.from('sessions')
+      .select('*')
+      .eq('id', id)
+      .eq('user_id', currentUser.id)
+      .maybeSingle();
+    if (error) {
+      console.error('[Cloud] Failed to load session:', error.message);
+    } else if (data) {
+      console.log('[Cloud] Loaded session from cloud:', id);
       saved = { id: data.id, mode: data.mode, history: data.history, designDocText: data.design_doc, timestamp: new Date(data.updated_at).getTime() };
+    } else {
+      console.warn('[Cloud] Session not found in cloud:', id);
     }
   }
   if (!saved) {
@@ -1961,6 +1970,8 @@ async function loadHistorySession(id) {
     localStorage.setItem('office_hours_session', JSON.stringify(saved));
     closeHistory();
     loadSessionState();
+  } else {
+    console.error('[Load] Session not found anywhere:', id);
   }
 }
 
