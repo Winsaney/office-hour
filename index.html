@@ -995,8 +995,9 @@ let currentUser = null;
 
 sb.auth.onAuthStateChange(async (event, session) => {
   currentUser = session?.user || null;
+  console.log('[Auth]', event, currentUser?.email || 'no user');
   updateAuthUI();
-  if (event === 'SIGNED_IN') {
+  if (event === 'SIGNED_IN' || (event === 'INITIAL_SESSION' && currentUser)) {
     await mergeLocalToCloud();
     await loadPrefsFromCloud();
   }
@@ -1997,11 +1998,14 @@ async function saveSessionState() {
 
 async function getHistoryList() {
   if (currentUser) {
-    const { data } = await sb.from('sessions')
+    const { data, error } = await sb.from('sessions')
       .select('id, mode, history, design_doc, created_at, updated_at')
       .order('updated_at', { ascending: false })
       .limit(50);
-    if (data) {
+    if (error) {
+      console.error('[Cloud] Failed to load history:', error.message);
+    } else if (data) {
+      console.log('[Cloud] Loaded', data.length, 'sessions from cloud');
       return data.map(s => ({
         id: s.id,
         mode: s.mode,
@@ -2084,13 +2088,15 @@ function resetSession() {
 async function mergeLocalToCloud() {
   let localSessions = [];
   try { localSessions = JSON.parse(localStorage.getItem('office_hours_history') || '[]'); } catch {}
-  if (localSessions.length === 0) return;
+  if (localSessions.length === 0) { console.log('[Merge] No local sessions to merge'); return; }
 
-  const { data: cloudSessions } = await sb.from('sessions').select('id');
+  console.log('[Merge] Found', localSessions.length, 'local sessions, checking cloud...');
+  const { data: cloudSessions, error: fetchErr } = await sb.from('sessions').select('id');
+  if (fetchErr) { console.error('[Merge] Failed to fetch cloud sessions:', fetchErr.message); return; }
+
   const cloudIds = new Set((cloudSessions || []).map(s => s.id));
-
   const toUpload = localSessions.filter(s => !cloudIds.has(s.id));
-  if (toUpload.length === 0) return;
+  if (toUpload.length === 0) { console.log('[Merge] All local sessions already in cloud'); return; }
 
   const rows = toUpload.map(s => ({
     id: s.id,
@@ -2102,7 +2108,10 @@ async function mergeLocalToCloud() {
     updated_at: new Date(s.timestamp).toISOString(),
   }));
 
-  await sb.from('sessions').insert(rows);
+  console.log('[Merge] Uploading', rows.length, 'sessions to cloud...');
+  const { error: insertErr } = await sb.from('sessions').insert(rows);
+  if (insertErr) console.error('[Merge] Upload failed:', insertErr.message);
+  else console.log('[Merge] Upload successful!');
 }
 
 async function loadPrefsFromCloud() {
