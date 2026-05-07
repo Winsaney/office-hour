@@ -26,14 +26,20 @@ const SB_URL = 'https://ncnocticlmavlfwqjyun.supabase.co';
 const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5jbm9jdGljbG1hdmxmd3FqeXVuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgwNzE1NDEsImV4cCI6MjA5MzY0NzU0MX0.YR65MjD4141qjKGIeQmAZ13qcLTYfAMNn8oQm5_YvcI';
 const sb = window.supabase.createClient(SB_URL, SB_KEY);
 let currentUser = null;
+let authReady = false; // becomes true after first onAuthStateChange fires
 
 sb.auth.onAuthStateChange(async (event, session) => {
   currentUser = session?.user || null;
+  authReady = true;
   log('[Auth]', event, currentUser?.email || 'no user');
   updateAuthUI();
   if (event === 'SIGNED_IN' || (event === 'INITIAL_SESSION' && currentUser)) {
     await mergeLocalToCloud();
     await loadPrefsFromCloud();
+    // If history panel is already open, refresh it now that we're authenticated
+    if (document.getElementById('historyOverlay')?.classList.contains('open')) {
+      renderHistory();
+    }
   }
 });
 
@@ -985,7 +991,22 @@ async function callAPI(system, messages, onChunk) {
 // ── History Management ────────────────────────────────────────────────────
 function openHistory() {
   document.getElementById('historyOverlay').classList.add('open');
-  renderHistory();
+  if (!authReady) {
+    // Auth state not yet resolved — show loading, then re-render when ready
+    const list = document.getElementById('historyList');
+    list.innerHTML = '<div class="empty-history" style="opacity:0.5">Loading…</div>';
+    // Poll until authReady (max ~3s)
+    let attempts = 0;
+    const waitForAuth = setInterval(() => {
+      attempts++;
+      if (authReady || attempts > 15) {
+        clearInterval(waitForAuth);
+        renderHistory();
+      }
+    }, 200);
+  } else {
+    renderHistory();
+  }
 }
 
 function closeHistory() {
@@ -1108,6 +1129,7 @@ async function getHistoryList() {
   if (currentUser) {
     const { data, error } = await sb.from('sessions')
       .select('id, mode, history, design_doc, created_at, updated_at')
+      .eq('user_id', currentUser.id)  // ✅ filter by current user
       .order('updated_at', { ascending: false })
       .limit(50);
     if (error) {
